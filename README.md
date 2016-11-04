@@ -1,4 +1,4 @@
-Boolberry [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](http://www.gnu.org/licenses/lgpl-3.0) [![Build Status](https://travis-ci.org/BlockchainDevelopmentCompany/boolberry.svg?branch=master)](https://travis-ci.org/BlockchainDevelopmentCompany/boolberry) [![Slack Status](https://boolberry.herokuapp.com/badge.svg)](https://boolberry.herokuapp.com/)  [![Stories in Ready](https://badge.waffle.io/BlockchainDevelopmentCompany/boolberry.png?label=ready&title=Ready)](http://waffle.io/BlockchainDevelopmentCompany/boolberry)
+﻿Boolberry [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](http://www.gnu.org/licenses/lgpl-3.0) [![Build Status](https://travis-ci.org/BlockchainDevelopmentCompany/boolberry.svg?branch=master)](https://travis-ci.org/BlockchainDevelopmentCompany/boolberry) [![Slack Status](https://boolberry.herokuapp.com/badge.svg)](https://boolberry.herokuapp.com/)  [![Stories in Ready](https://badge.waffle.io/BlockchainDevelopmentCompany/boolberry.png?label=ready&title=Ready)](http://waffle.io/BlockchainDevelopmentCompany/boolberry)
 =========
 
 Building
@@ -39,7 +39,7 @@ Download and install CMAKE from: https://cmake.org/download/
 
 Download and install Boost from: https://sourceforge.net/projects/boost/files/boost-binaries/
  - Specifically for Boost, download and install at least version 1.53 or later (but not 1.54 or 1.55) (Boost 1.56 will be used in this    tutorial)
- - Install Boost to C:\boost\boost_1_56_0 or some other directory you wish to put it in
+ - Install Boost to C:\boost\boost_1_56_0 or some other directory you wish to put it in. Be sure to navigate to your boost_1_56_0 folder and rename the library where the static libraries are stored from "lib64-msvc-12.0" to "lib". This will ensure that cmake can find the libraries using the -DBOOST_ROOT option in the commands below.
 
 Next you need to open up the VS2013 Command Prompt found here: "C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\Tools\Shortcuts\VS2013 x64 Cross Tools Command Prompt"
 
@@ -50,6 +50,10 @@ Next run the following commands:
  mkdir build
  cd build
  cmake -DBOOST_ROOT=C:\boost\boost_1_56_0 -G "Visual Studio 12 Win64" ..
- msbuild.exe boolberry.sln /p:Configuration=Release
+ msbuild.exe boolberry.sln /p:Configuration=Release /m
 ```
+Note: The /m is optional on the last line and it will direct msbuild to perform a multi-core build. Sometimes this speeds things up.
+
 This resulting executables can be found here: \build\src\Release
+
+A list of some common problems encountered during a Windows build can be found in the comments here: https://github.com/BlockchainDevelopmentCompany/boolberry/pull/6

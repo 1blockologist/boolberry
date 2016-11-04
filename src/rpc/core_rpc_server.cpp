@@ -113,6 +113,23 @@ namespace currency
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
+  bool core_rpc_server::on_get_peerlists(const COMMAND_RPC_GET_PEERLISTS::request& req, COMMAND_RPC_GET_PEERLISTS::response& res, connection_context& cntx)
+  {
+	  if (m_p2p.get_payload_object().get_core().get_blockchain_storage().is_storing_blockchain())
+	  {
+		  res.status = CORE_RPC_STATUS_BUSY;
+		  return true;
+	  }
+
+	  std::list<nodetool::peerlist_entry> white;
+	  std::list<nodetool::peerlist_entry> gray;
+	  m_p2p.get_peerlist_manager().get_peerlist_full(gray, white);
+	  res.white_list = white;
+	  res.gray_list = gray;
+	  res.status = CORE_RPC_STATUS_OK;
+	  return true;
+  }
+  //------------------------------------------------------------------------------------------------------------------------------
   bool core_rpc_server::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req, COMMAND_RPC_GET_BLOCKS_FAST::response& res, connection_context& cntx)
   {
     CHECK_CORE_READY();
@@ -308,6 +325,7 @@ namespace currency
     {
       blobdata blob = t_serializable_object_to_blob(tx);
       res.txs_as_hex.push_back(string_tools::buff_to_hex_nodelimer(blob));
+      res.txs_as_json.push_back(obj_to_json_str(tx));
     }
 
     BOOST_FOREACH(const auto& miss_tx, missed_txs)
@@ -697,6 +715,22 @@ namespace currency
     }
     res.status = CORE_RPC_STATUS_OK;
     return true;
+  }
+  //------------------------------------------------------------------------------------------------------------------------------
+  bool core_rpc_server::on_get_connections(const COMMAND_RPC_GET_CONNECTIONS::request& req, COMMAND_RPC_GET_CONNECTIONS::response& res, epee::json_rpc::error& error_resp, connection_context& cntx)
+  {
+	if(!check_core_ready())
+	{
+	error_resp.code = CORE_RPC_ERROR_CODE_CORE_BUSY;
+	error_resp.message = "Core is busy.";
+	return false;
+	}
+
+	res.connections = m_p2p.get_payload_object().get_connections();
+
+	res.status = CORE_RPC_STATUS_OK;
+
+	return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
   bool core_rpc_server::on_get_alias_details(const COMMAND_RPC_GET_ALIAS_DETAILS::request& req, COMMAND_RPC_GET_ALIAS_DETAILS::response& res, epee::json_rpc::error& error_resp, connection_context& cntx)

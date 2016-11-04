@@ -437,12 +437,32 @@ namespace nodetool
         return;
       }
 
-      if(!handle_remote_peerlist(rsp.local_peerlist, rsp.node_data.local_time, context))
-      {
-        LOG_ERROR_CCONTEXT("COMMAND_HANDSHAKE: failed to handle_remote_peerlist(...), closing connection.");
-        add_ip_fail(context.m_remote_ip);
-        return;
-      }
+	  if (!rsp.local_peerlist.empty())
+	  {
+		  std::list<peerlist_entry> old_type_peers;
+		  BOOST_FOREACH(const peerlist_entry_old& be, rsp.local_peerlist)
+		  {
+			  peerlist_entry ple;
+			  ple.adr = be.adr;
+			  ple.id = be.id;
+			  ple.last_seen = be.last_seen;
+			  ple.version = "Unknown";
+			  old_type_peers.push_back(ple);
+		  }
+		  if (!handle_remote_peerlist(old_type_peers, rsp.node_data.local_time, context))
+		  {
+			  LOG_ERROR_CCONTEXT("COMMAND_HANDSHAKE: failed to handle_remote_peerlist(...), closing connection.");
+			  add_ip_fail(context.m_remote_ip);
+			  return;
+		  }
+	  }
+	  else if (!rsp.local_peerlist_w_version.empty() && !handle_remote_peerlist(rsp.local_peerlist_w_version, rsp.node_data.local_time, context))
+	  {
+		  LOG_ERROR_CCONTEXT("COMMAND_HANDSHAKE: failed to handle_remote_peerlist(...), closing connection.");
+		  add_ip_fail(context.m_remote_ip);
+		  return;
+	  }
+
       hsh_result = true;
       if(!just_take_peerlist)
       {
@@ -454,7 +474,12 @@ namespace nodetool
         }
 
         pi = context.peer_id = rsp.node_data.peer_id;
-        m_peerlist.set_peer_just_seen(rsp.node_data.peer_id, context.m_remote_ip, context.m_remote_port);
+		if (rsp.version.empty()){
+			m_peerlist.set_peer_just_seen(rsp.node_data.peer_id, context.m_remote_ip, context.m_remote_port, "Unknown");
+		}
+		else{
+			m_peerlist.set_peer_just_seen(rsp.node_data.peer_id, context.m_remote_ip, context.m_remote_port, rsp.version);
+		}
 
         if(rsp.node_data.peer_id == m_config.m_peer_id)
         {
@@ -462,7 +487,14 @@ namespace nodetool
           hsh_result = false;
           return;
         }
-        LOG_PRINT_CCONTEXT_L0(" COMMAND_HANDSHAKE INVOKED OK");
+		
+		if (rsp.version.empty()){
+			LOG_PRINT_CCONTEXT_L0(" COMMAND_HANDSHAKE INVOKED OK, Remote Daemon Version: Unknown");
+		}
+		else{
+			LOG_PRINT_CCONTEXT_L0(" COMMAND_HANDSHAKE INVOKED OK, Remote Daemon Version: " << rsp.version);
+		}
+        
       }else
       {
         LOG_PRINT_CCONTEXT_L0(" COMMAND_HANDSHAKE(AND CLOSE) INVOKED OK");
@@ -505,14 +537,40 @@ namespace nodetool
         return;
       }
 
-      if(!handle_remote_peerlist(rsp.local_peerlist, rsp.local_time, context))
-      {
-        LOG_ERROR_CCONTEXT("COMMAND_TIMED_SYNC: failed to handle_remote_peerlist(...), closing connection.");
-        m_net_server.get_config_object().close(context.m_connection_id );
-        add_ip_fail(context.m_remote_ip);
-      }
-      if(!context.m_is_income)
-        m_peerlist.set_peer_just_seen(context.peer_id, context.m_remote_ip, context.m_remote_port);
+	  if (!rsp.local_peerlist.empty())
+	  {
+		  std::list<peerlist_entry> old_type_peers;
+		  BOOST_FOREACH(const peerlist_entry_old& be, rsp.local_peerlist)
+		  {
+			  peerlist_entry ple;
+			  ple.adr = be.adr;
+			  ple.id = be.id;
+			  ple.last_seen = be.last_seen;
+			  ple.version = "Unknown";
+			  old_type_peers.push_back(ple);
+		  }
+		  if (!handle_remote_peerlist(old_type_peers, rsp.local_time, context))
+		  {
+			  LOG_ERROR_CCONTEXT("COMMAND_HANDSHAKE: failed to handle_remote_peerlist(...), closing connection.");
+			  add_ip_fail(context.m_remote_ip);
+			  return;
+		  }
+	  }
+	  else if (!rsp.local_peerlist_w_version.empty() && !handle_remote_peerlist(rsp.local_peerlist_w_version, rsp.local_time, context))
+	  {
+		  LOG_ERROR_CCONTEXT("COMMAND_HANDSHAKE: failed to handle_remote_peerlist(...), closing connection.");
+		  add_ip_fail(context.m_remote_ip);
+		  return;
+	  }
+
+	  if (!context.m_is_income){
+		  if (rsp.version.empty()){
+			  m_peerlist.set_peer_just_seen(context.peer_id, context.m_remote_ip, context.m_remote_port, "Unknown");
+		  }
+		  else{
+			  m_peerlist.set_peer_just_seen(context.peer_id, context.m_remote_ip, context.m_remote_port, rsp.version);
+		  }
+	  }
       m_payload_handler.process_payload_sync_data(rsp.payload_data, context, false);
     });
 
@@ -1140,8 +1198,9 @@ namespace nodetool
     }
 
     //fill response
+	rsp.version = PROJECT_VERSION_LONG;
     rsp.local_time = time(NULL);
-    m_peerlist.get_peerlist_head(rsp.local_peerlist);
+	m_peerlist.get_peerlist_head(rsp.local_peerlist_w_version);
     m_payload_handler.get_payload_sync_data(rsp.payload_data);
     fill_maintainers_entry(rsp.maintrs_entry);
     LOG_PRINT_CCONTEXT_L2("COMMAND_TIMED_SYNC");
@@ -1209,7 +1268,8 @@ namespace nodetool
     }
 
     //fill response
-    m_peerlist.get_peerlist_head(rsp.local_peerlist);
+	rsp.version = PROJECT_VERSION_LONG;
+	m_peerlist.get_peerlist_head(rsp.local_peerlist_w_version);
     get_local_node_data(rsp.node_data);
     m_payload_handler.get_payload_sync_data(rsp.payload_data);
     fill_maintainers_entry(rsp.maintrs_entry);

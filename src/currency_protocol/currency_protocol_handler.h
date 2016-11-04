@@ -17,6 +17,8 @@
 PUSH_WARNINGS
 DISABLE_VS_WARNINGS(4355)
 
+#define LOCALHOST_INT 2130706433
+
 namespace currency
 {
 
@@ -53,6 +55,7 @@ namespace currency
     t_core& get_core(){return m_core;}
     bool is_synchronized(){return m_synchronized;}
     void log_connections();
+    std::list<connection_info> get_connections();
     uint64_t get_core_inital_height();
     uint64_t get_max_seen_height();
   private:

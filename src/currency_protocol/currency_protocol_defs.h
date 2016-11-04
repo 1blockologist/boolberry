@@ -28,6 +28,55 @@ namespace currency
     END_KV_SERIALIZE_MAP()
   };
 
+  /************************************************************************/
+  /*                                                                      */
+  /************************************************************************/
+  struct connection_info
+    {
+      bool incoming;
+      bool localhost;
+      bool local_ip;
+
+      std::string ip;
+      std::string port;
+
+      std::string peer_id;
+
+      uint64_t recv_count;
+      uint64_t recv_idle_time;
+
+      uint64_t send_count;
+      uint64_t send_idle_time;
+
+      std::string state;
+
+      uint64_t live_time;
+
+      uint64_t avg_download;
+      uint64_t current_download;
+
+      uint64_t avg_upload;
+      uint64_t current_upload;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(incoming)
+        KV_SERIALIZE(localhost)
+        KV_SERIALIZE(local_ip)
+        KV_SERIALIZE(ip)
+        KV_SERIALIZE(port)
+        KV_SERIALIZE(peer_id)
+        KV_SERIALIZE(recv_count)
+        KV_SERIALIZE(recv_idle_time)
+        KV_SERIALIZE(send_count)
+        KV_SERIALIZE(send_idle_time)
+        KV_SERIALIZE(state)
+        KV_SERIALIZE(live_time)
+        KV_SERIALIZE(avg_download)
+        KV_SERIALIZE(current_download)
+        KV_SERIALIZE(avg_upload)
+        KV_SERIALIZE(current_upload)
+      END_KV_SERIALIZE_MAP()
+  };
 
   /************************************************************************/
   /*                                                                      */

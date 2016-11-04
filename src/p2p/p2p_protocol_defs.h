@@ -22,6 +22,11 @@ namespace nodetool
   {
     uint32_t ip;
     uint32_t port;
+
+	BEGIN_KV_SERIALIZE_MAP()
+		KV_SERIALIZE(ip)
+		KV_SERIALIZE(port)
+	END_KV_SERIALIZE_MAP()
   };
 
   struct peerlist_entry
@@ -29,6 +34,23 @@ namespace nodetool
     net_address adr;
     peerid_type id;
     time_t last_seen;
+	std::string version;
+
+	BEGIN_KV_SERIALIZE_MAP()
+		KV_SERIALIZE(adr)
+		KV_SERIALIZE(id)
+		KV_SERIALIZE(last_seen)
+		KV_SERIALIZE(version)
+	END_KV_SERIALIZE_MAP()
+  };
+
+  //It is necessary to keep this because handshakes with older daemons will fail to serialize/unserialize correctly if we use just peerlist_entry
+  //	which now includes a daemon version for each peer entry
+  struct peerlist_entry_old
+  {
+	  net_address adr;
+	  peerid_type id;
+	  time_t last_seen;
   };
 
   struct connection_entry
@@ -198,14 +220,18 @@ namespace nodetool
     {
       basic_node_data node_data;
       t_playload_type payload_data;
-      std::list<peerlist_entry> local_peerlist;
+	  std::list<peerlist_entry_old> local_peerlist;
+	  std::list<peerlist_entry> local_peerlist_w_version;
       maintainers_entry maintrs_entry;
+	  std::string version;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(node_data)
         KV_SERIALIZE(payload_data)
         KV_SERIALIZE_CONTAINER_POD_AS_BLOB(local_peerlist)
+		KV_SERIALIZE_CONTAINER_POD_AS_BLOB(local_peerlist_w_version)
         KV_SERIALIZE(maintrs_entry)
+		KV_SERIALIZE(version)
       END_KV_SERIALIZE_MAP()
     };
 	};
@@ -234,14 +260,18 @@ namespace nodetool
     {
       int64_t local_time;
       t_playload_type payload_data;
-      std::list<peerlist_entry> local_peerlist; 
+	  std::list<peerlist_entry_old> local_peerlist;
+	  std::list<peerlist_entry> local_peerlist_w_version;
       maintainers_entry maintrs_entry;
+	  std::string version;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(local_time)
         KV_SERIALIZE(payload_data)
         KV_SERIALIZE_CONTAINER_POD_AS_BLOB(local_peerlist)
+		KV_SERIALIZE_CONTAINER_POD_AS_BLOB(local_peerlist_w_version)
         KV_SERIALIZE(maintrs_entry)
+		KV_SERIALIZE(version);
       END_KV_SERIALIZE_MAP()
     };
   };

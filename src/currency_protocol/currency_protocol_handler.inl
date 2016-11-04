@@ -93,6 +93,79 @@ namespace currency
     LOG_PRINT_L0("Connections: " << ENDL << ss.str());
   }
   //------------------------------------------------------------------------------------------------------------------------
+  template<class t_core>
+	std::list<connection_info> t_currency_protocol_handler<t_core>::get_connections()
+	{
+	  std::list<connection_info> connections;
+	
+	  m_p2p->for_each_connection([&](const connection_context& cntxt, nodetool::peerid_type peer_id)
+	  {
+		connection_info cnx;
+		auto timestamp = time(NULL);
+	
+		cnx.incoming = cntxt.m_is_income ? true : false;
+	
+		cnx.ip = epee::string_tools::get_ip_string_from_int32(cntxt.m_remote_ip);
+		cnx.port = std::to_string(cntxt.m_remote_port);
+	
+		std::stringstream peer_id_str;
+		peer_id_str << std::hex << peer_id;
+		peer_id_str >> cnx.peer_id;
+	
+		cnx.recv_count = cntxt.m_recv_cnt;
+		cnx.recv_idle_time = timestamp - cntxt.m_last_recv;
+	
+		cnx.send_count = cntxt.m_send_cnt;
+		cnx.send_idle_time = timestamp;
+	
+		cnx.state = get_protocol_state_string(cntxt.m_state);
+	
+		cnx.live_time = timestamp - cntxt.m_started;
+	
+		uint32_t ip;
+		ip = ntohl(cntxt.m_remote_ip);
+		if (ip == LOCALHOST_INT)
+		{
+		  cnx.localhost = true;
+		}
+		else
+		{
+		  cnx.localhost = false;
+		}
+	
+		if (ip > 3232235520 && ip < 3232301055) // 192.168.x.x
+		{
+		  cnx.local_ip = true;
+		}
+		else
+		{
+		  cnx.local_ip = false;
+		}
+	
+		auto connection_time = time(NULL) - cntxt.m_started;
+		if (connection_time == 0)
+		{
+		  cnx.avg_download = 0;
+		  cnx.avg_upload = 0;
+		}
+	
+		else
+		{
+		  cnx.avg_download = cntxt.m_recv_cnt / connection_time / 1024;
+		  cnx.avg_upload = cntxt.m_send_cnt / connection_time / 1024;
+		}
+	
+		cnx.current_download = cntxt.m_current_speed_down / 1024;
+		cnx.current_upload = cntxt.m_current_speed_up / 1024;
+	
+		connections.push_back(cnx);
+	
+		return true;
+	  });
+	
+	  return connections;
+  }
+  //------------------------------------------------------------------------------------------------------------------------
   template<class t_core> 
   bool t_currency_protocol_handler<t_core>::process_payload_sync_data(const CORE_SYNC_DATA& hshd, currency_connection_context& context, bool is_inital)
   {

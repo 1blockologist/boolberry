@@ -42,6 +42,6 @@ namespace tools
 
     a >> obj;
     return !data_file.fail();
-    CATCH_ENTRY_L0("unserialize_obj_from_file", false);
+    CATCH_ENTRY_L0("unserialize_obj_from_file --> This could be because you are upgrading to the Rune Daemon...In which case this is a one time issue.", false);
   }
 }

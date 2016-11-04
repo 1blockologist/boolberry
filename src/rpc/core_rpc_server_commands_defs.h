@@ -106,12 +106,14 @@ namespace currency
 
     struct response
     {
-      std::list<std::string> txs_as_hex;  //transactions blobs as hex
+      std::list<std::string> txs_as_hex;  //Transaction blobs as hex
+      std::list<std::string> txs_as_json; //Transaction blobs translated from hex to JSON
       std::list<std::string> missed_tx;   //not found transactions
       std::string status;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(txs_as_hex)
+        KV_SERIALIZE(txs_as_json)
         KV_SERIALIZE(missed_tx)
         KV_SERIALIZE(status)
       END_KV_SERIALIZE_MAP()
@@ -355,6 +357,28 @@ namespace currency
     };
   };    
   //-----------------------------------------------
+  struct COMMAND_RPC_GET_PEERLISTS
+  {
+	struct request
+	{
+		BEGIN_KV_SERIALIZE_MAP()
+		END_KV_SERIALIZE_MAP()
+	};
+
+	struct response
+	{
+		std::string status;
+		std::list<nodetool::peerlist_entry> white_list;
+		std::list<nodetool::peerlist_entry> gray_list;
+
+		BEGIN_KV_SERIALIZE_MAP()
+			KV_SERIALIZE(status)
+			KV_SERIALIZE(white_list)
+			KV_SERIALIZE(gray_list)
+		END_KV_SERIALIZE_MAP()
+	};
+  };
+  //-----------------------------------------------
   struct COMMAND_RPC_STOP_MINING
   {
     struct request
@@ -576,6 +600,26 @@ namespace currency
      };
 
   };
+
+  struct COMMAND_RPC_GET_CONNECTIONS
+	{
+	  struct request
+	  {
+		BEGIN_KV_SERIALIZE_MAP()
+		END_KV_SERIALIZE_MAP()
+	  };
+
+	  struct response
+	  {
+		std::string status;
+		std::list<connection_info> connections;
+
+		BEGIN_KV_SERIALIZE_MAP()
+		  KV_SERIALIZE(status)
+		  KV_SERIALIZE(connections)
+		END_KV_SERIALIZE_MAP()
+	  };
+	};
 
   struct COMMAND_RPC_GET_ALIAS_DETAILS
   {
