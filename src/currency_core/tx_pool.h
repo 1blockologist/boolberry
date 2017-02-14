@@ -13,6 +13,7 @@ using namespace epee;
 #include <boost/serialization/version.hpp>
 #include <boost/utility.hpp>
 
+#include "rpc/core_rpc_server_commands_defs.h"
 #include "string_tools.h"
 #include "syncobj.h"
 #include "math_helper.h"
@@ -57,6 +58,7 @@ namespace currency
     bool fill_block_template(block &bl, size_t median_size, uint64_t already_generated_coins, uint64_t already_donated_coins, size_t &total_size, uint64_t &fee);
     bool get_transactions(std::list<transaction>& txs);
     bool get_transaction(const crypto::hash& h, transaction& tx);
+	bool get_transactions_and_spent_keys_info(std::vector<currency::tx_info>& tx_infos, std::vector<currency::spent_key_image_info>& key_image_infos);
     size_t get_transactions_count();
     bool remove_transaction_keyimages(const transaction& tx);
     bool have_key_images(const std::unordered_set<crypto::key_image>& kic, const transaction& tx);

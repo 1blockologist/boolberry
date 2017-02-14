@@ -20,14 +20,16 @@ namespace currency
 {
   namespace
   {
-    const command_line::arg_descriptor<std::string> arg_rpc_bind_ip   = {"rpc-bind-ip", "", "127.0.0.1"};
-    const command_line::arg_descriptor<std::string> arg_rpc_bind_port = {"rpc-bind-port", "", std::to_string(RPC_DEFAULT_PORT)};
+    const command_line::arg_descriptor<std::string> arg_rpc_bind_ip   = {"rpc-bind-ip", "IP for RPC Server", "127.0.0.1"};
+    const command_line::arg_descriptor<std::string> arg_rpc_bind_port = {"rpc-bind-port", "Port for RPC Server", std::to_string(RPC_DEFAULT_PORT)};
+	const command_line::arg_descriptor<bool> arg_rpc_restricted_rpc = { "restricted-rpc", "Restrict RPC to view only commands", false};
   }
   //-----------------------------------------------------------------------------------
   void core_rpc_server::init_options(boost::program_options::options_description& desc)
   {
     command_line::add_arg(desc, arg_rpc_bind_ip);
     command_line::add_arg(desc, arg_rpc_bind_port);
+	command_line::add_arg(desc, arg_rpc_restricted_rpc);
   }
   //------------------------------------------------------------------------------------------------------------------------------
   core_rpc_server::core_rpc_server(core& cr, nodetool::node_server<currency::t_currency_protocol_handler<currency::core> >& p2p):m_core(cr), m_p2p(p2p), m_session_counter(0)
@@ -37,6 +39,7 @@ namespace currency
   {
     m_bind_ip = command_line::get_arg(vm, arg_rpc_bind_ip);
     m_port = command_line::get_arg(vm, arg_rpc_bind_port);
+	m_restricted = command_line::get_arg(vm, arg_rpc_restricted_rpc);
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
@@ -126,6 +129,13 @@ namespace currency
 	  m_p2p.get_peerlist_manager().get_peerlist_full(gray, white);
 	  res.white_list = white;
 	  res.gray_list = gray;
+	  res.status = CORE_RPC_STATUS_OK;
+	  return true;
+  }
+  //------------------------------------------------------------------------------------------------------------------------------
+  bool core_rpc_server::on_stop_daemon(const COMMAND_RPC_STOP_DAEMON::request& req, COMMAND_RPC_STOP_DAEMON::response& res, connection_context& cntx)
+  {
+	  m_p2p.send_stop_signal();
 	  res.status = CORE_RPC_STATUS_OK;
 	  return true;
   }
@@ -292,6 +302,69 @@ namespace currency
     m_core.get_blockchain_storage().check_keyimages(req.images, res.images_stat);
     res.status = CORE_RPC_STATUS_OK;
     return true;
+  }
+  //------------------------------------------------------------------------------------------------------------------------------
+  bool core_rpc_server::on_check_keyimages_nonbinary(const COMMAND_RPC_CHECK_KEYIMAGES_NONBINARY::request& req, COMMAND_RPC_CHECK_KEYIMAGES_NONBINARY::response& res, connection_context& cntx)
+  {
+	  CHECK_CORE_READY();
+	  std::vector<crypto::key_image> key_images;
+	  BOOST_FOREACH(const auto& ki_hex_str, req.images)
+	  {
+		  blobdata b;
+		  if (!string_tools::parse_hexstr_to_binbuff(ki_hex_str, b))
+		  {
+			  res.status = "Failed to parse hex representation of key image";
+			  return true;
+		  }
+		  if (b.size() != sizeof(crypto::key_image))
+		  {
+			  res.status = "Failed, size of data mismatch";
+		  }
+		  key_images.push_back(*reinterpret_cast<const crypto::key_image*>(b.data()));
+	  }
+	  std::vector<bool> images_statuses;
+	  bool r = m_core.get_blockchain_storage().check_keyimages(key_images, images_statuses);
+	  if (!r)
+	  {
+		  res.status = "Failed";
+		  return true;
+	  }
+
+	  res.image_statuses.clear();
+	  for (size_t n = 0; n < images_statuses.size(); ++n)
+		  res.image_statuses.push_back(images_statuses[n] ? COMMAND_RPC_CHECK_KEYIMAGES_NONBINARY::UNSPENT : COMMAND_RPC_CHECK_KEYIMAGES_NONBINARY::SPENT_IN_BLOCKCHAIN);
+
+	  //Check the pool as well
+	  std::vector<currency::tx_info> txs;
+	  std::vector <currency::spent_key_image_info> ki;
+	  r = m_core.get_pool_transactions_and_spent_keys_info(txs, ki);
+	  if (!r)
+	  { 
+		  res.status = "Failed";
+		  return true;
+	  }
+	  for (std::vector<currency::spent_key_image_info>::const_iterator i = ki.begin(); i != ki.end(); ++i)
+	  {
+		  crypto::hash hash;
+		  crypto::key_image spent_key_image;
+		  if (parse_hash256(i->id_hash, hash))
+		  {
+			  memcpy(&spent_key_image, &hash, sizeof(hash)); //From Monero Comments: a bit dodgy, should be other parse functions somewhere
+			  for (size_t n = 0; n < res.image_statuses.size(); ++n)
+			  {
+				  if (res.image_statuses[n] == COMMAND_RPC_CHECK_KEYIMAGES_NONBINARY::UNSPENT)
+				  {
+					  if (key_images[n] == spent_key_image)
+					  {
+						  res.image_statuses[n] = COMMAND_RPC_CHECK_KEYIMAGES_NONBINARY::SPENT_IN_POOL;
+						  break;
+					  }
+				  }
+			  }
+		  }
+	  }
+	  res.status = CORE_RPC_STATUS_OK;
+	  return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
   bool core_rpc_server::on_get_transactions(const COMMAND_RPC_GET_TRANSACTIONS::request& req, COMMAND_RPC_GET_TRANSACTIONS::response& res, connection_context& cntx)

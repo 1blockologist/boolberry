@@ -44,6 +44,45 @@ namespace currency
     END_KV_SERIALIZE_MAP()
   };
 
+  struct tx_info
+  {
+	  std::string id_hash;
+	  std::string tx_json;
+	  uint64_t blob_size;
+	  uint64_t fee;
+	  std::string max_used_block_id_hash;
+	  uint64_t max_used_block_height;
+	  bool kept_by_block;
+	  uint64_t last_failed_height;
+	  std::string last_failed_id_hash;
+	  uint64_t receive_time;
+
+	  BEGIN_KV_SERIALIZE_MAP()
+		  KV_SERIALIZE(id_hash)
+		  KV_SERIALIZE(tx_json)
+		  KV_SERIALIZE(blob_size)
+		  KV_SERIALIZE(fee)
+		  KV_SERIALIZE(max_used_block_id_hash)
+		  KV_SERIALIZE(max_used_block_height)
+		  KV_SERIALIZE(kept_by_block)
+		  KV_SERIALIZE(last_failed_height)
+		  KV_SERIALIZE(last_failed_id_hash)
+		  KV_SERIALIZE(receive_time)
+		  KV_SERIALIZE(last_failed_id_hash)
+	  END_KV_SERIALIZE_MAP()
+  };
+
+  struct spent_key_image_info
+  {
+	  std::string id_hash;
+	  std::vector<std::string> txs_hashes;
+
+	  BEGIN_KV_SERIALIZE_MAP()
+		  KV_SERIALIZE(id_hash)
+		  KV_SERIALIZE(txs_hashes)
+	  END_KV_SERIALIZE_MAP()
+  };
+
   struct COMMAND_RPC_GET_HEIGHT
   {
     struct request
@@ -144,7 +183,7 @@ namespace currency
   {
     struct request
     {
-      std::list<crypto::key_image> images;
+      std::vector<crypto::key_image> images;
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE_CONTAINER_POD_AS_BLOB(images)
       END_KV_SERIALIZE_MAP()
@@ -152,7 +191,7 @@ namespace currency
 
     struct response
     {
-      std::list<bool> images_stat;  //true - unspent, false - spent
+      std::vector<bool> images_stat;  //true - unspent, false - spent
       std::string status;
 
       BEGIN_KV_SERIALIZE_MAP()
@@ -160,6 +199,34 @@ namespace currency
         KV_SERIALIZE(status)
       END_KV_SERIALIZE_MAP()
     };
+  };
+  //-----------------------------------------------
+  struct COMMAND_RPC_CHECK_KEYIMAGES_NONBINARY
+  {
+	  enum STATUS {
+		  UNSPENT = 0,
+		  SPENT_IN_BLOCKCHAIN = 1,
+		  SPENT_IN_POOL = 2,
+	  };
+
+	  struct request
+	  {
+		  std::vector<std::string> images;
+		  BEGIN_KV_SERIALIZE_MAP()
+			  KV_SERIALIZE(images)
+		  END_KV_SERIALIZE_MAP()
+	  };
+
+	  struct response
+	  {
+		  std::vector<int> image_statuses;
+		  std::string status;
+
+		  BEGIN_KV_SERIALIZE_MAP()
+			  KV_SERIALIZE(image_statuses)
+			  KV_SERIALIZE(status)
+		  END_KV_SERIALIZE_MAP()
+	  };
   };
   //-----------------------------------------------
   struct COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES
@@ -377,6 +444,24 @@ namespace currency
 			KV_SERIALIZE(gray_list)
 		END_KV_SERIALIZE_MAP()
 	};
+  };
+  //-----------------------------------------------
+  struct COMMAND_RPC_STOP_DAEMON
+  {
+	  struct request
+	  {
+		  BEGIN_KV_SERIALIZE_MAP()
+		  END_KV_SERIALIZE_MAP()
+	  };
+
+	  struct response
+	  {
+		  std::string status;
+
+		  BEGIN_KV_SERIALIZE_MAP()
+			  KV_SERIALIZE(status)
+		  END_KV_SERIALIZE_MAP()
+	  };
   };
   //-----------------------------------------------
   struct COMMAND_RPC_STOP_MINING
