@@ -240,6 +240,40 @@ namespace currency
     tx = it->second.tx;
     return true;
   }
+  //-----------------------------------------------------------------------------------------------
+  bool tx_memory_pool::get_transactions_and_spent_keys_info(std::vector<currency::tx_info>& tx_infos, std::vector<currency::spent_key_image_info>& key_image_infos)
+  {
+	  CRITICAL_REGION_LOCAL(m_transactions_lock);
+	  for (const auto& tx_vt : m_transactions)
+	  {
+		  tx_info txi;
+		  const tx_details& txd = tx_vt.second;
+		  txi.id_hash = epee::string_tools::pod_to_hex(tx_vt.first);
+		  txi.tx_json = obj_to_json_str(*const_cast<transaction*>(&txd.tx));
+		  txi.blob_size = txd.blob_size;
+		  txi.fee = txd.fee;
+		  txi.kept_by_block = txd.kept_by_block;
+		  txi.max_used_block_height = txd.max_used_block_height;
+		  txi.max_used_block_id_hash = epee::string_tools::pod_to_hex(txd.max_used_block_id);
+		  txi.last_failed_height = txd.last_failed_height;
+		  txi.last_failed_id_hash = epee::string_tools::pod_to_hex(txd.last_failed_id);
+		  txi.receive_time = txd.receive_time;
+		  tx_infos.push_back(txi);
+	  }
+
+	  for (const key_images_container::value_type& kee : m_spent_key_images) {
+		  const crypto::key_image& k_image = kee.first;
+		  const std::unordered_set<crypto::hash>& kei_image_set = kee.second;
+		  spent_key_image_info ki;
+		  ki.id_hash = epee::string_tools::pod_to_hex(k_image);
+		  for (const crypto::hash& tx_id_hash : kei_image_set)
+		  {
+			  ki.txs_hashes.push_back(epee::string_tools::pod_to_hex(tx_id_hash));
+		  }
+		  key_image_infos.push_back(ki);
+	  }
+	  return true;
+  }
   //---------------------------------------------------------------------------------
   bool tx_memory_pool::on_blockchain_inc(uint64_t new_block_height, const crypto::hash& top_block_id)
   {

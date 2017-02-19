@@ -70,6 +70,7 @@ namespace currency
      void set_currency_protocol(i_currency_protocol* pprotocol);
      void set_checkpoints(checkpoints&& chk_pts);
 
+	 bool get_pool_transactions_and_spent_keys_info(std::vector<currency::tx_info> &tx_infos, std::vector<currency::spent_key_image_info> &key_image_infos);
      bool get_pool_transactions(std::list<transaction>& txs);
      size_t get_pool_transactions_count();
      size_t get_blockchain_total_transactions();

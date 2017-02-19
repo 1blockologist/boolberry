@@ -1208,13 +1208,13 @@ bool blockchain_storage::get_transactions_daily_stat(uint64_t& daily_cnt, uint64
   return true;
 }
 //------------------------------------------------------------------
-bool blockchain_storage::check_keyimages(const std::list<crypto::key_image>& images, std::list<bool>& images_stat)
+bool blockchain_storage::check_keyimages(const std::vector<crypto::key_image>& images, std::vector<bool>& images_stat)
 {
   //true - unspent, false - spent
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
   for (auto& ki : images)
   {
-    images_stat.push_back(m_spent_keys.count(ki)?false:true);
+	  images_stat.push_back(have_tx_keyimg_as_spent(ki) ? false : true);
   }
   return true;
 }
