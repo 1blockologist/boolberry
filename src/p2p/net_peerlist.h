@@ -27,6 +27,8 @@
 #include "net_peerlist_boost_serialization.h"
 #include "common/boost_serialization_helper.h"
 
+#include <vector>
+
 #define CURRENT_PEERLIST_STORAGE_ARCHIVE_VER    7
 
 namespace nodetool
@@ -50,8 +52,8 @@ namespace nodetool
     bool get_gray_peer_by_index(peerlist_entry& p, size_t i);
     bool append_with_peer_white(const peerlist_entry& pr);
     bool append_with_peer_gray(const peerlist_entry& pr);
-    bool set_peer_just_seen(peerid_type peer, uint32_t ip, uint32_t port, std::string vers);
-    bool set_peer_just_seen(peerid_type peer, const net_address& addr, std::string vers);
+    bool set_peer_just_seen(peerid_type peer, uint32_t ip, uint32_t port, std::vector<char> vers);
+    bool set_peer_just_seen(peerid_type peer, const net_address& addr, std::vector<char> vers);
     bool set_peer_unreachable(const peerlist_entry& pr);
     bool is_ip_allowed(uint32_t ip);
     void trim_white_peerlist();
@@ -278,7 +280,7 @@ namespace nodetool
   }
   //--------------------------------------------------------------------------------------------------
   inline
-  bool peerlist_manager::set_peer_just_seen(peerid_type peer, uint32_t ip, uint32_t port, std::string vers)
+  bool peerlist_manager::set_peer_just_seen(peerid_type peer, uint32_t ip, uint32_t port, std::vector<char> vers)
   {
     net_address addr;
     addr.ip = ip;
@@ -287,7 +289,7 @@ namespace nodetool
   }
   //--------------------------------------------------------------------------------------------------
   inline
-  bool peerlist_manager::set_peer_just_seen(peerid_type peer, const net_address& addr, std::string vers)
+  bool peerlist_manager::set_peer_just_seen(peerid_type peer, const net_address& addr, std::vector<char> vers)
   {
     TRY_ENTRY();
     CRITICAL_REGION_LOCAL(m_peerlist_lock);
