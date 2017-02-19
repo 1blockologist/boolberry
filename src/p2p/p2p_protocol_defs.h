@@ -9,6 +9,7 @@
 #include "misc_language.h"
 #include "currency_config.h"
 #include "crypto/crypto.h"
+#include <vector>
 
 namespace nodetool
 {
@@ -34,7 +35,7 @@ namespace nodetool
     net_address adr;
     peerid_type id;
     time_t last_seen;
-	std::string version;
+	std::vector<char> version;
 
 	BEGIN_KV_SERIALIZE_MAP()
 		KV_SERIALIZE(adr)

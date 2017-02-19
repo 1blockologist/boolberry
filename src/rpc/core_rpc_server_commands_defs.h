@@ -367,13 +367,13 @@ namespace currency
 
 	struct response
 	{
-		std::string status;
+		std::vector<char> status;
 		std::list<nodetool::peerlist_entry> white_list;
 		std::list<nodetool::peerlist_entry> gray_list;
 
 		BEGIN_KV_SERIALIZE_MAP()
 			KV_SERIALIZE(status)
-			KV_SERIALIZE(white_list)
+			KV_SERIALIZE(white_list)s
 			KV_SERIALIZE(gray_list)
 		END_KV_SERIALIZE_MAP()
 	};
