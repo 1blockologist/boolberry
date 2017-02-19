@@ -373,7 +373,7 @@ namespace currency
 
 		BEGIN_KV_SERIALIZE_MAP()
 			KV_SERIALIZE(status)
-			KV_SERIALIZE(white_list)s
+			KV_SERIALIZE(white_list)
 			KV_SERIALIZE(gray_list)
 		END_KV_SERIALIZE_MAP()
 	};
