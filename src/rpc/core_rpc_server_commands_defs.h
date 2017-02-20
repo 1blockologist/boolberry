@@ -10,6 +10,7 @@
 #include "p2p/p2p_protocol_defs.h"
 #include "rpc/mining_protocol_defs.h"
 #include "storages/portable_storage_base.h"
+#include <boost/array.hpp>
 
 namespace currency
 {
@@ -434,7 +435,7 @@ namespace currency
 
 	struct response
 	{
-		std::vector<char> status;
+		std::string status;
 		std::list<nodetool::peerlist_entry> white_list;
 		std::list<nodetool::peerlist_entry> gray_list;
 

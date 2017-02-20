@@ -10,6 +10,7 @@
 #include "currency_config.h"
 #include "crypto/crypto.h"
 #include <vector>
+#include <boost/array.hpp>
 
 namespace nodetool
 {
@@ -35,7 +36,7 @@ namespace nodetool
     net_address adr;
     peerid_type id;
     time_t last_seen;
-	std::vector<char> version;
+	boost::array<char, 128> version;
 
 	BEGIN_KV_SERIALIZE_MAP()
 		KV_SERIALIZE(adr)
@@ -224,7 +225,7 @@ namespace nodetool
 	  std::list<peerlist_entry_old> local_peerlist;
 	  std::list<peerlist_entry> local_peerlist_w_version;
       maintainers_entry maintrs_entry;
-	  std::string version;
+	  boost::array<char, 128> version;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(node_data)
@@ -264,7 +265,7 @@ namespace nodetool
 	  std::list<peerlist_entry_old> local_peerlist;
 	  std::list<peerlist_entry> local_peerlist_w_version;
       maintainers_entry maintrs_entry;
-	  std::string version;
+	  boost::array<char, 128> version;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(local_time)

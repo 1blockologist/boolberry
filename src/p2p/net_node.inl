@@ -1198,7 +1198,7 @@ namespace nodetool
     }
 
     //fill response
-	rsp.version = PROJECT_VERSION_LONG;
+	strncpy(rsp.version, PROJECT_VERSION_LONG, sizeof(rsp.version));
     rsp.local_time = time(NULL);
 	m_peerlist.get_peerlist_head(rsp.local_peerlist_w_version);
     m_payload_handler.get_payload_sync_data(rsp.payload_data);
@@ -1268,7 +1268,7 @@ namespace nodetool
     }
 
     //fill response
-	rsp.version = PROJECT_VERSION_LONG;
+	strncpy(rsp.version, PROJECT_VERSION_LONG, sizeof(rsp.version));
 	m_peerlist.get_peerlist_head(rsp.local_peerlist_w_version);
     get_local_node_data(rsp.node_data);
     m_payload_handler.get_payload_sync_data(rsp.payload_data);
